@@ -67,8 +67,28 @@ document.addEventListener("DOMContentLoaded", () => {
             nameSpan.className = "participant-name";
             nameSpan.textContent = p;
 
+            const deleteIcon = document.createElement('span');
+            deleteIcon.className = 'delete-icon';
+            deleteIcon.textContent = '🗑️';
+            deleteIcon.style.cursor = 'pointer';
+            deleteIcon.addEventListener('click', async () => {
+              const success = await unregisterParticipant(p);
+              if (success) {
+                // Check if this was the last participant
+                const participantsList = li.parentElement;
+                li.remove();
+                if (participantsList.children.length === 0) {
+                  const noParticipantsLi = document.createElement("li");
+                  noParticipantsLi.className = "no-participants";
+                  noParticipantsLi.textContent = "No registered participants yet.";
+                  participantsList.appendChild(noParticipantsLi);
+                }
+              }
+            });
+
             li.appendChild(avatar);
             li.appendChild(nameSpan);
+            li.appendChild(deleteIcon);
             participantsListEl.appendChild(li);
           });
         }
@@ -131,6 +151,59 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error signing up:", error);
     }
   });
+
+  // Function to unregister a participant
+  async function unregisterParticipant(email) {
+    try {
+      // Find the activity this participant belongs to
+      const activityCard = Array.from(document.querySelectorAll('.activity-card')).find(card => 
+        Array.from(card.querySelectorAll('.participant-name')).some(span => span.textContent === email)
+      );
+      
+      const activityName = activityCard?.querySelector('h4')?.textContent;
+
+      if (!activityName) {
+        console.error('Could not find activity for participant:', email);
+        return false;
+      }
+
+      const response = await fetch(
+        `/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        messageDiv.textContent = "Successfully unregistered from activity";
+        messageDiv.className = "message success";
+        return true;
+      } else {
+        messageDiv.textContent = result.detail || "An error occurred while unregistering";
+        messageDiv.className = "message error";
+        // Refresh the activities list to ensure UI is in sync with server
+        fetchActivities();
+        return false;
+      }
+
+      messageDiv.classList.remove("hidden");
+
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        messageDiv.classList.add("hidden");
+      }, 5000);
+    } catch (error) {
+      messageDiv.textContent = "Failed to unregister. Please try again.";
+      messageDiv.className = "message error";
+      messageDiv.classList.remove("hidden");
+      console.error("Error unregistering:", error);
+      // Refresh the activities list to ensure UI is in sync with server
+      fetchActivities();
+      return false;
+    }
+  }
 
   // Initialize app
   fetchActivities();

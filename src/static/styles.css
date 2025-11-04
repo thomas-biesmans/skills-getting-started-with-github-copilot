@@ -89,8 +89,8 @@ section h3 {
 }
 
 .participants ul {
-  list-style: disc;
-  margin-left: 22px;
+  list-style-type: none;
+  margin-left: 0;
   padding-left: 0;
 }
 
