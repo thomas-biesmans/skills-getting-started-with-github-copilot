@@ -83,6 +83,14 @@ document.addEventListener("DOMContentLoaded", () => {
                   noParticipantsLi.textContent = "No registered participants yet.";
                   participantsList.appendChild(noParticipantsLi);
                 }
+                
+                // Update available spots count
+                const activityCard = participantsList.closest('.activity-card');
+                const spotsElement = activityCard.querySelector('p:nth-of-type(3)');
+                const maxParticipants = details.max_participants;
+                const currentParticipants = participantsList.querySelectorAll('.participant-item').length;
+                const spotsLeft = maxParticipants - currentParticipants;
+                spotsElement.innerHTML = `<strong>Availability:</strong> ${spotsLeft} spots left`;
               }
             });
 
